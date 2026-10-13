@@ -52,9 +52,42 @@ function jsonLdText(node: unknown, out: string[]): void {
   }
 }
 
+// React streaming SSR (Next.js App Router and similar) sends Suspense fallbacks in place,
+// then the real content as hidden <div id="S:n"> blocks swapped in by $RC("B:x","S:y") calls.
+// A browser runs that swap; this function does the same on the parsed document.
+function resolveStreamedBoundaries($: cheerio.CheerioAPI, warnings: string[]): number {
+  const pairs = new Map<string, string>();
+  $("script").each((_, el) => {
+    for (const m of $(el).text().matchAll(/\$RC\(\s*"(B:[^"]+)"\s*,\s*"(S:[^"]+)"/g)) pairs.set(m[1], m[2]);
+  });
+  let swapped = 0;
+  for (let pass = 0; pass < 10; pass++) {
+    const pending = $("template[id^='B:']").toArray().filter((t) => pairs.has(t.attribs.id));
+    if (!pending.length) break;
+    for (const t of pending) {
+      const segment = $(`div[id='${pairs.get(t.attribs.id)}']`).first();
+      if (!segment.length) continue;
+      // Remove the fallback: siblings after the template up to the boundary's closing comment.
+      let next = t.nextSibling;
+      while (next && !(next.type === "comment" && (next as any).data === "/$")) {
+        const after = next.nextSibling;
+        $(next).remove();
+        next = after;
+      }
+      $(t).replaceWith(segment.contents());
+      segment.remove();
+      swapped++;
+    }
+  }
+  const left = $("template[id^='B:']").length;
+  if (left) warnings.push(`${left} streamed section(s) could not be resolved`);
+  return swapped;
+}
+
 export function extractFromHtml(url: string, html: string, status = 200): ExtractedPage {
   const $ = cheerio.load(html);
   const warnings: string[] = [];
+  resolveStreamedBoundaries($, warnings);
 
   const metaContent = (sel: string) => clean($(sel).first().attr("content"));
   const jsonLd: string[] = [];
