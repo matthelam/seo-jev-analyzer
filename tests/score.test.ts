@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { score, termSum, pointsAvailable, stat, level, scoreLevel, splitsIntoClusters } from "@/lib/score";
+import { score, termSum, pointsAvailable, stat, level, scoreLevel, splitsIntoClusters, sdOfMean } from "@/lib/score";
 
 const TERMS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"];
 const EXPECTED = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"];
@@ -42,5 +42,12 @@ describe("statistics", () => {
   it("flags two clusters", () => {
     expect(splitsIntoClusters([...Array(50).fill(3.0), ...Array(50).fill(3.5)])).toBe(true);
     expect(splitsIntoClusters(Array.from({ length: 100 }, (_, i) => 3 + (i % 7) * 0.002))).toBe(false);
+  });
+});
+
+describe("profile band", () => {
+  it("uses the SD of a mean, which shrinks with more pages", () => {
+    expect(sdOfMean([0.02, 0.02, 0.02, 0.02])).toBeCloseTo(0.01);
+    expect(sdOfMean(Array(18).fill(0.02))).toBeCloseTo(0.02 / Math.sqrt(18));
   });
 });

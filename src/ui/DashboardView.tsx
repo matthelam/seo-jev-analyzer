@@ -19,7 +19,7 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { db } from "@/lib/db";
 import { runAnalysis, resumeCalibration, startCalibration } from "@/lib/engine";
 import { exportProfile, downloadJson } from "@/lib/io";
-import { pointsAvailable, scoreLevel, level, band } from "@/lib/score";
+import { pointsAvailable, scoreLevel, level, band, sdOfMean } from "@/lib/score";
 import type { Result, Run, Scope } from "@/lib/types";
 import { useApp } from "./AppState";
 import { BandChart, TermChart } from "./charts";
@@ -78,7 +78,8 @@ export function DashboardView({ onEdit }: { onEdit: () => void }) {
     return { id: p.id, path: p.path, intent: p.intent, meta: m?.score, metaSd: sdOf(p.id, "meta"), page: g?.score, pageSd: sdOf(p.id, "page"), change };
   });
 
-  const metaSd = runCal?.siteSd?.meta, pageSd = runCal?.siteSd?.page;
+  // The profile score is a mean of page scores, so its band uses the SD of a mean, not the average page SD.
+  const metaSd = sdOfMean(rows.map((r) => r.metaSd)), pageSd = sdOfMean(rows.map((r) => r.pageSd));
   const pointsAvail = rows.reduce((s, r) => s + (r.meta !== undefined ? 10 - r.meta : 0), 0);
 
   const columns: GridColDef<(typeof rows)[number]>[] = [

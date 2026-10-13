@@ -61,3 +61,9 @@ export function splitsIntoClusters(xs: number[]): boolean {
   if (lo.n < 3 || hi.n < 3) return false;
   return best > 4 * Math.max(lo.sd, hi.sd, 0.005);
 }
+
+/** SD of a mean of independent scores: sqrt(sum of variances) / n. Used for the profile score's band. */
+export function sdOfMean(sds: number[]): number {
+  if (!sds.length) return 0;
+  return Math.sqrt(sds.reduce((a, s) => a + s * s, 0)) / sds.length;
+}

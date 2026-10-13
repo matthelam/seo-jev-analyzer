@@ -92,6 +92,7 @@ async def main():
         async with pg.expect_download() as dl:
             await pg.get_by_role("button", name="Export").click()
         path = await (await dl.value).path()
+        import shutil; shutil.copy(path, f"{SHOTS}/export.json")
         data = json.load(open(path))
         check("export holds profile, calibration, runs and results", len(data["runs"]) == 2 and len(data["calibrationRuns"]) == 600 and len(data["results"]) == 12)
         score_before = data["runs"][0]["profileScore"]["meta"]

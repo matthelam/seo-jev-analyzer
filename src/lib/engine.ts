@@ -47,6 +47,9 @@ export async function extractPages(pages: Page[], concurrency: number, onProgres
   return Object.fromEntries(ids.map((id, i) => [id, cleaned[i]])) as Record<string, PageText>;
 }
 
+// Each task sends two Jev requests at once, so run half as many tasks as the requested parallel Jev requests.
+const taskConcurrency = (jevRequests: number) => Math.max(1, Math.floor(jevRequests / 2));
+
 async function ask(text: PageText, scope: Scope, intent: string, terms: string[], signal?: AbortSignal) {
   const [a, b] = await Promise.all([api.askIntent(text, scope, intent, signal), api.askTerms(text, scope, terms, signal)]);
   return { intentFit: a.score, probabilities: a.probabilities, ratings: b.ratings, model: a.model };
@@ -108,7 +111,7 @@ export async function resumeCalibration(calibrationId: string, concurrency: numb
   let done = total - tasks.length;
   onProgress({ phase: "Calibrating", done, total });
   try {
-    await pool(tasks, concurrency, async (t) => {
+    await pool(tasks, taskConcurrency(concurrency), async (t) => {
       const page = pages.get(t.pageId)!;
       const r = await ask(cal.texts[t.pageId], t.scope, page.intent, profile.terms, signal);
       await db.calibrationRuns.put({
@@ -157,7 +160,7 @@ export async function runAnalysis(
     const texts = await extractPages(included, cfg.concurrency, onProgress, signal);
     const tasks = included.flatMap((p) => SCOPES.map((scope) => ({ p, scope })));
     let done = 0;
-    await pool(tasks, cfg.concurrency, async ({ p, scope }) => {
+    await pool(tasks, taskConcurrency(cfg.concurrency), async ({ p, scope }) => {
       const r = await ask(texts[p.id], scope, p.intent, profile.terms, signal);
       if (r.model !== calibration.model) throw new api.ApiError("model_mismatch", `Jev answered with ${r.model}`, 409);
       await db.results.put({
