@@ -109,7 +109,7 @@ export function extractFromHtml(url: string, html: string, status = 200): Extrac
 export async function extractPage(url: string): Promise<ExtractedPage> {
   const res = await fetch(url, {
     redirect: "follow",
-    headers: { "User-Agent": "seo-jev-analyzer/0.1 (+https://github.com/lammp/seo-jev-analyzer)", Accept: "text/html" },
+    headers: { "User-Agent": "seo-jev-analyzer/0.1 (+https://github.com/matthelam/seo-jev-analyzer)", Accept: "text/html" },
   });
   const type = res.headers.get("content-type") ?? "";
   if (!type.includes("html")) throw new Error(`Not HTML (${type}) at ${url}`);
