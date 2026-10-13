@@ -13,6 +13,7 @@ import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
 import MenuBookOutlined from "@mui/icons-material/MenuBookOutlined";
 import SettingsOutlined from "@mui/icons-material/SettingsOutlined";
 import { ThemeModeMenu } from "./ThemeModeMenu";
+import { TopBarSelectors } from "./TopBarSelectors";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: <DashboardOutlined /> },
@@ -68,6 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Typography variant="h6" component={Link} href="/dashboard" sx={{ color: "text.primary", textDecoration: "none", flexGrow: 1 }}>
               seo-jev-analyzer
             </Typography>
+            <TopBarSelectors />
             <ThemeModeMenu />
           </Toolbar>
         </AppBar>

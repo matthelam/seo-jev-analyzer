@@ -54,10 +54,14 @@ A calibration belongs to one Jev version and one set of inputs. Changing the mod
 
 ## Setting up a profile
 
+Start from the Dashboard. You can also import a profile file exported from this app, or load the Boulderfest example to see a complete profile.
+
 1. **Domain and sitemap.** Enter the site address. The tool reads `robots.txt` for a sitemap, or `/sitemap.xml`, or a sitemap address you paste.
 2. **Pages.** Type a path to filter the list; every URL that starts with what you type stays. Tick the pages to score.
 3. **Terms and intents.** Paste the site's search terms, one per line. For each page, enter its intent statement and its ten expected terms in order.
-4. **Calibrate.** Runs every page 100 times. You can pause, close the tab and resume.
+4. **Calibrate.** First checks the question wording on three practice texts, then runs every page 100 times on both scores. You can pause, close the tab and resume.
+
+To change a profile later, select **Edit profile** on the Dashboard. Any change to the terms, intents, expected lists or pages marks the calibration stale.
 
 ## Reading the Dashboard
 

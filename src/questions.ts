@@ -1,6 +1,9 @@
 // Jev question definitions for seo-jev-analyzer.
 // Two requests per page: intent fit (sees the intent) and term relevance (never sees the intent).
 
+// Changing any question or level wording changes the scale: bump this version so calibrations go stale.
+export const QUESTION_VERSION = "q1";
+
 export const INTENT_LEVELS = [
   "The page does not address the question at all.",
   "The page mentions the topic of the question but does not answer it.",

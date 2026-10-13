@@ -2,7 +2,7 @@
 
 Measures how closely each page of a website matches the search intent you set for it, using the [TypeSafe](https://docs.typesafe.ai) decision model **Jev** as the judge of relevance. Every score comes with a band measured by calibration, and all data stays in your browser.
 
-> Status: early build. The Guide, theme and app shell are in place; profile setup, calibration and the Dashboard are in progress. The full user guide is [docs/guide.md](docs/guide.md), also shown on the app's Guide page.
+The full user guide is [docs/guide.md](docs/guide.md), also shown on the app's Guide page. An example profile for a fictional bouldering gym is in [public/examples/boulderfest.json](public/examples/boulderfest.json); load it from the Dashboard.
 
 ## The score
 
@@ -56,8 +56,12 @@ The app refuses to run in production without an access gate, because an open dep
 npm install
 npm run dev        # http://localhost:3000
 npm run build
+npm test           # unit tests (score maths, filter, fingerprint, extractor, example profile)
+./tests/e2e/run-e2e.sh   # browser test after a build: setup, calibration with resume, runs, export and import, password gate
 npx tsx src/extract.ts https://example.com/some-page   # try the page text extractor
 ```
+
+The browser test runs with `JEV_MOCK=1` and no `TYPESAFE_API_KEY`: Jev answers are simulated and local addresses may be fetched. Test mode switches itself off whenever a real key is set.
 
 Built with Next.js, React and MUI, themed with Material Design 3 values. Light and dark themes follow the system setting by default.
 

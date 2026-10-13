@@ -1,0 +1,90 @@
+{
+ "app": "seo-jev-analyzer",
+ "schemaVersion": 1,
+ "exportedAt": "2026-10-13T00:00:00Z",
+ "profile": {
+  "id": "fx",
+  "name": "Pottery fixture",
+  "domain": "http://localhost:3200",
+  "sitemapUrl": "http://localhost:3200/sitemap.xml",
+  "pathFilter": "/course",
+  "terms": [
+   "pottery classes",
+   "wheel throwing",
+   "beginner course",
+   "glazing course",
+   "course prices",
+   "clay and firing",
+   "six weeks",
+   "course payments",
+   "instalments",
+   "card payments",
+   "gift vouchers",
+   "studio hire"
+  ],
+  "createdAt": 1,
+  "updatedAt": 1
+ },
+ "pages": [
+  {
+   "id": "f0",
+   "profileId": "fx",
+   "url": "http://localhost:3200/courses/",
+   "path": "/courses/",
+   "intent": "What pottery courses can I take?",
+   "expected": [
+    "pottery classes",
+    "beginner course",
+    "wheel throwing",
+    "glazing course",
+    "course prices",
+    "six weeks",
+    "clay and firing",
+    "course payments",
+    "gift vouchers",
+    "studio hire"
+   ],
+   "included": true
+  },
+  {
+   "id": "f1",
+   "profileId": "fx",
+   "url": "http://localhost:3200/courses/beginner.html",
+   "path": "/courses/beginner.html",
+   "intent": "How long is the beginner pottery course and what does it cost?",
+   "expected": [
+    "beginner course",
+    "six weeks",
+    "clay and firing",
+    "wheel throwing",
+    "course prices",
+    "pottery classes",
+    "glazing course",
+    "course payments",
+    "instalments",
+    "studio hire"
+   ],
+   "included": true
+  },
+  {
+   "id": "f2",
+   "profileId": "fx",
+   "url": "http://localhost:3200/course-payments.html",
+   "path": "/course-payments.html",
+   "intent": "How do I pay for a pottery course?",
+   "expected": [
+    "course payments",
+    "instalments",
+    "card payments",
+    "course prices",
+    "beginner course",
+    "pottery classes",
+    "gift vouchers",
+    "six weeks",
+    "studio hire",
+    "glazing course"
+   ],
+   "included": true
+  }
+ ]
+}
