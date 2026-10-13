@@ -21,31 +21,34 @@ A page with no intent statement or no expected top 10 cannot be scored.
 
 ## 3. Jev questions
 
-Each page gets two requests, so the intent statement never reaches the term questions.
+Each page gets four requests: intent fit and term relevance, each on the metadata alone and on metadata plus body. The intent statement never reaches the term questions.
 
 | Question | Type | Count | State | Levels (low to high) |
 |---|---|---|---|---|
 | Intent fit | Score | 1 | Page text and the intent statement | Does not address the intent · Mentions the topic without answering · Answers in part, key facts missing · Answers with most key facts · Answers fully and directly with the key facts |
 | Term relevance | Score | One per term | Page text only | Not mentioned · Mentioned in passing · A supporting topic · A main topic · The page's central subject |
 
-Scores are normalised to 0 to 1 (score divided by 4).
+Ratings are normalised to 0 to 1 (score divided by 4).
+
+## 3a. The score
+
+Score = (sum of the ratings of the page's ten expected terms) × intent fit, 0 to 10. Computed separately for the metadata scope (metadata score) and the metadata-plus-body scope (page score). The profile score is the mean across pages.
 
 ## 4. Calibration
 
-1. Run both requests 100 times per page, unchanged. No early exit.
-2. For every page, intent and term pair: mean and standard deviation (SD) of the 100 scores.
-3. Site SD = mean of all pair SDs, stored separately for intent fit and term relevance.
+1. Run all four requests 100 times per page, unchanged. No early exit.
+2. For every page and scope: mean and standard deviation (SD) of the 100 scores; per-term SDs are kept for review.
+3. Site SD = mean of the page score SDs, per scope.
 4. Flag any pair whose scores split into two clusters.
 5. Question check: three practice texts with an obvious answer each must rank their target term first and score intent fit at 0.75 or above.
 6. Store the calibration with the model version and a fingerprint of the terms, intents, expected lists, question text and page set.
 
 ## 5. Analysis
 
-1. Run both requests once per selected page.
-2. Intent score with its band: score ± 2 × site SD.
-3. Term ranking sorted by score; each term shown with its band.
-4. Adjacent terms whose gap is less than 2 × √2 × site SD are marked as tied.
-5. Top-10 agreement: count of expected terms in the observed top 10 (0 to 10), plus their positions.
+1. Run all four requests once per selected page.
+2. Metadata score and page score, each with its band: score ± 2 × that page's calibrated SD.
+3. Scores whose bands overlap are marked as level.
+4. Points available per page: each expected term's unearned share (1 − rating) and the intent discount (term sum × (1 − intent fit)), largest first.
 
 ## 6. Rules
 
