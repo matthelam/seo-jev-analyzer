@@ -1,6 +1,6 @@
 "use client";
 
-// Shows that work is kept in this browser automatically, and confirms each finished calibration or run.
+// Shows that work is kept in this browser automatically, and confirms each finished run.
 
 import { useEffect, useState } from "react";
 import Chip from "@mui/material/Chip";
@@ -20,7 +20,7 @@ export function SaveStatus() {
   }, [profiles?.length]);
 
   const tip = [
-    "Profiles, calibrations and runs are saved in this browser as they happen. There is nothing to save by hand.",
+    "Profiles and runs are saved in this browser as they happen. There is nothing to save by hand.",
     `Saved data belongs to ${host || "this address"} in this browser only. Another browser, a private window or another address has separate storage.`,
     persisted ? "The browser has granted persistent storage." : "The browser has not granted persistent storage, so it may clear data if disk space runs very low. Export a file if you need a backup.",
   ].join(" ");

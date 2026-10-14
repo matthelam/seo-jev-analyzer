@@ -16,7 +16,7 @@ A page with no intent statement or no expected top 10 cannot be scored.
 1. Fetch the URL; follow redirects; reject non-HTML.
 2. Metadata: page title, meta description, Open Graph title and description, and the text values of every JSON-LD block.
 3. Body: the text inside `<main>`; else `role="main"`; else `<body>`. In every case remove invisible elements (`script`, `style`, `noscript`, `template`, `svg`, `iframe`, hidden) and site chrome (`header`, `nav`, `footer`, `aside` and their ARIA roles).
-4. Site pass: remove any body line that appears on 80% or more of the selected pages.
+4. Boilerplate: remove every body line held in the profile's boilerplate list. The list holds lines found on 80% or more of the profile's ticked pages, and is found again when the set of ticked pages changes.
 5. Send to Jev as one state with two named fields, `meta` and `body`.
 
 ## 3. Jev questions
@@ -34,28 +34,26 @@ Ratings are normalised to 0 to 1 (score divided by 4).
 
 Score = (sum of the ratings of the page's ten expected terms) × intent fit, 0 to 10. Computed separately for the metadata scope (metadata score) and the metadata-plus-body scope (page score). The profile score is the mean across pages.
 
-## 4. Calibration
+## 4. Noise floor
 
-1. Run all four requests 100 times per page, unchanged. No early exit.
-2. For every page and scope: mean and standard deviation (SD) of the 100 scores; per-term SDs are kept for review.
-3. Site SD = mean of the page score SDs, per scope.
-4. Flag any pair whose scores split into two clusters.
-5. Question check: three practice texts with an obvious answer each must rank their target term first and score intent fit at 0.75 or above.
-6. Store the calibration with the model version and a fingerprint of the terms, intents, expected lists, question text and page set.
+1. Measured once per Jev version and question version, not per profile: 10 public pages, text frozen, 100 runs each on both scopes (the Jev Consistency Report).
+2. Noise floor = 2 × the largest score SD found. For `jev-1.13.0` with `q1`: ± 0.19.
+3. A model or question version without a measured floor is refused.
+4. Self test: three practice texts with an obvious answer each must rank their target term first and score intent fit at 0.75 or above.
 
-## 5. Analysis
+## 5. Scoring and comparison
 
-1. Run all four requests once per selected page.
-2. Metadata score and page score, each with its band: score ± 2 × that page's calibrated SD.
-3. Scores whose bands overlap are marked as level.
-4. Points available per page: each expected term's unearned share (1 − rating) and the intent discount (term sum × (1 − intent fit)), largest first.
+1. Run all four requests once per page, or 2 to 10 times and take the mean (the SD is reported).
+2. Metadata score and page score, each shown with the noise floor as its band.
+3. A change between two scores averaging nA and nB runs is level when within the noise floor × √(1/nA + 1/nB): ± 0.274 for two single runs. Beyond it, up or down. Measured on the report data, two single runs of the noisiest page differ by more than 0.274 in 4.3% of pairs (0.3% on average across pages); a threshold of 0.194 would have flagged 16.9%.
+4. Two results compare only when their fingerprints match: model version, question version, term list, intent statement and expected terms. Page text is not in the fingerprint; changing it is what a comparison measures.
+5. Points available per page: each expected term's unearned share (1 − rating) and the intent discount (term sum × (1 − intent fit)), largest first.
 
 ## 6. Rules
 
 | Rule | Requirement |
 |---|---|
-| Version lock | Every request names the pinned model. A response whose `model` field differs is discarded and the calibration marked stale |
-| Staleness | A change to the model version, terms, intents, expected lists, question text or page set marks the calibration stale. A stale project cannot analyse until recalibrated |
-| No time expiry | Calibrations do not expire by age |
-| Comparison | Results compare only when scored under the same calibration |
+| Version lock | Every request names the pinned model. A response whose `model` field differs is refused |
+| Comparison | Results compare only when their fingerprints match |
+| One engine | The web app and the MCP server call the same engine operations; see `docs/architecture.md` |
 | Read-only | The tool reads public pages and writes only to its own database |

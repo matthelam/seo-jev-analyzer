@@ -9,7 +9,7 @@ import { AppShell } from "@/ui/AppShell";
 
 export const metadata: Metadata = {
   title: "seo-jev-analyzer",
-  description: "Measures how closely each page matches its search intent, using the Jev decision model with a calibrated noise band.",
+  description: "Measures how closely each page matches its search intent, using the Jev decision model, with a measured noise floor.",
   robots: { index: false, follow: false },
 };
 

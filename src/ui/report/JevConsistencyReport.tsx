@@ -33,8 +33,12 @@ export function JevConsistencyReport() {
   const pct = (x: number) => `${(100 * x).toFixed(x === 1 ? 0 : 1).replace(/\.0$/, "")}%`;
   const clusters = pages.flatMap((p) => [p.meta.clusters, p.page.clusters]).filter(Boolean).length;
   const edits = pages.flatMap((p) => [p.improved.delta, p.degraded.delta]);
-  const clear = edits.filter((x) => Math.abs(x) > d.noiseFloor).length;
-  const subFloor = edits.filter((x) => Math.abs(x) <= d.noiseFloor);
+  // A change carries the noise of both scores: threshold = floor x sqrt(1/nA + 1/nB).
+  const single = d.noiseFloor * Math.SQRT2;
+  const averaged = d.noiseFloor * Math.sqrt(1 / d.variantRuns + 1 / d.runs);
+  const clear = edits.filter((x) => Math.abs(x) > single).length;
+  const clearAveraged = edits.filter((x) => Math.abs(x) > averaged).length;
+  const subFloor = edits.filter((x) => Math.abs(x) <= single).sort((a, b) => Math.abs(a) - Math.abs(b));
   const one = d.convergence.find((c) => c.n === 1)!, five = d.convergence.find((c) => c.n === 5)!;
   const scatter = d.scatter.map((s) => ({ ...s, label: pages.find((p) => p.id === s.id)!.label }));
   const s2 = d.session2;
@@ -60,7 +64,7 @@ export function JevConsistencyReport() {
         <Tile value={f3(maxSd)} label="Largest standard deviation of any score, on a 0 to 10 scale" />
         <Tile value={pct(withinAll)} label={`of single runs land within ±${f2(d.noiseFloor)} of their 100-run mean; ${pct(withinWorst)} on the noisiest page`} />
         <Tile value={`${clusters} of 20`} label="Scores that split into two clusters" />
-        <Tile value={`${clear} of ${edits.length}`} label={`Metadata edits that moved the score beyond the noise floor of ±${f2(d.noiseFloor)}`} />
+        <Tile value={`${clear} of ${edits.length}`} label={`Metadata edits detectable from a single run before and after (beyond ±${f2(single)})`} />
       </Box>
 
       <Typography variant="h5" component="h2" sx={{ mt: 5 }}>1. Repeat runs barely move</Typography>
@@ -82,10 +86,10 @@ export function JevConsistencyReport() {
 
       <Typography variant="h5" component="h2" sx={{ mt: 5 }}>3. Real edits stand far above the noise</Typography>
       <Typography variant="body1">
-        We made two edits to each page's metadata and scored each {d.variantRuns} times: an empty description with a one-word title, and a description rewritten to answer the intent. {clear} of {edits.length} edits moved the score by more than ±{f2(d.noiseFloor)}. The other {subFloor.length} moved it by {subFloor.map((x) => signed(x)).join(" and ")}, inside the noise, so they are reported as level.
+        We made two edits to each page's metadata and scored each {d.variantRuns} times: an empty description with a one-word title, and a description rewritten to answer the intent. A change carries the noise of both scores, so its threshold is the floor × √(1/runs + 1/runs before). Averaging {d.variantRuns} runs against {d.runs}, the threshold is ±{f3(averaged)} and {clearAveraged} of {edits.length} edits clear it. From one run before and one after, it is ±{f2(single)}: {clear} of {edits.length} clear it; the other {subFloor.length} moved the score by {subFloor.map((x) => signed(x)).join(", ")}.
       </Typography>
       <Figure n={3} title="Metadata score: stripped, live and rewritten" table={{ head: ["Page", "Stripped", "Live", "Rewritten", "Change, stripped", "Change, rewritten"], rows: pages.map((p) => [p.label, f2(p.degraded.mean), f2(p.meta.mean), f2(p.improved.mean), signed(p.degraded.delta), signed(p.improved.delta)]) }}>
-        <EditEffect pages={pages} floor={d.noiseFloor} />
+        <EditEffect pages={pages} floor={single} />
       </Figure>
 
       <Typography variant="h5" component="h2" sx={{ mt: 5 }}>4. Where the remaining noise comes from</Typography>
@@ -115,11 +119,11 @@ export function JevConsistencyReport() {
 
       <Typography variant="h5" component="h2" sx={{ mt: 5 }}>6. What this means for the tool</Typography>
       <DataTable
-        head={["Now", "Evidence", "Proposed"]}
+        head={["Before", "Evidence", "Now"]}
         text={[1, 2]}
         rows={[
           ["100-run calibration per profile before the first score", `Largest SD ${f3(maxSd)}`, `One noise floor per Jev version: ±${f2(d.noiseFloor)} (2 × largest SD)`],
-          ["Band taken from each profile's calibration", `${clear} of ${edits.length} edits cleared the floor`, `Changes within ±${f2(d.noiseFloor)} are reported as level`],
+          ["Band taken from each profile's calibration", `${clear} of ${edits.length} edits detectable from single runs`, `Each score ±${f2(d.noiseFloor)}; a change between two single runs is level within ±${f2(d.noiseFloor * Math.SQRT2)}, since both carry noise`],
           ["Calibration costs 4 requests × 100 runs per page", `${pct(withinAll)} of single runs within ±${f2(d.noiseFloor)}; noisiest page ${pct(withinWorst)}`, "Default 1 run per score; up to 10 when two scores are close"],
         ]}
       />

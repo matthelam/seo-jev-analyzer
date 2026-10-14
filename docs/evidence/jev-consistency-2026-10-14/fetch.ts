@@ -1,6 +1,6 @@
 // Fetch each page once and freeze its extracted text, so every run scores identical input.
 // Usage: npx tsx fetch.ts <out pages.json> <url> [url ...]
-import { extractPage } from "../../../src/extract";
+import { extractPage } from "../../../src/adapters/web/htmlReader";
 import { writeFileSync } from "node:fs";
 const urls = process.argv.slice(3);
 (async () => {

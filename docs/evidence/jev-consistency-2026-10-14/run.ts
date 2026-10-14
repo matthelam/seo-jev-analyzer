@@ -2,7 +2,9 @@
 // Resumable: appends one JSON line per answer pair to results.jsonl and skips work already done.
 // Usage (from the repo root): npx tsx docs/evidence/jev-consistency-2026-10-14/run.ts docs/evidence/jev-consistency-2026-10-14
 import { readFileSync, existsSync, appendFileSync, writeFileSync } from "node:fs";
-import { intentRequest, termRequest, norm, scoped, QUESTION_VERSION, type Scope } from "../../../src/questions";
+import { intentRequest, termRequest, norm, QUESTION_VERSION } from "../../../src/core/questions";
+import { scoped } from "../../../src/core/text";
+import type { Scope } from "../../../src/core/schema";
 
 for (const line of readFileSync(".env.local", "utf8").split(/\r?\n/)) {
   const m = line.match(/^([A-Z_]+)=(.*)$/);

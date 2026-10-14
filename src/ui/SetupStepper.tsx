@@ -1,6 +1,6 @@
 "use client";
 
-// Profile setup: 1 domain and sitemap, 2 pages, 3 terms and intents, 4 save and calibrate.
+// Profile setup: 1 domain and sitemap, 2 pages, 3 terms and intents, 4 save.
 // Also used to edit an existing profile. Import and the example profile skip straight to review.
 
 import { useMemo, useRef, useState } from "react";
@@ -21,20 +21,21 @@ import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Box from "@mui/material/Box";
 import LinearProgress from "@mui/material/LinearProgress";
-import { db, newId } from "@/lib/db";
-import { findSitemap } from "@/lib/api";
-import { importProfile } from "@/lib/io";
-import { matchesFilter } from "@/lib/filter";
-import type { Page, Profile } from "@/lib/types";
+import { db, newId } from "@/client/db";
+import { discoverPages } from "@/client/api";
+import { importProfile } from "@/client/io";
+import { pageProblems } from "@/client/profileDoc";
+import { matchesFilter, pathOf } from "@/core/profile";
+import { requestsPerRun } from "@/core/inputs";
+import { EXPECTED_COUNT } from "@/core/schema";
+import type { Page, Profile } from "@/client/types";
 import { useApp } from "./AppState";
 
 type Draft = { url: string; path: string; included: boolean; intent: string; expected: string[]; id?: string };
 
-const STEPS = ["Domain and sitemap", "Pages", "Terms and intents", "Save and calibrate"];
+const STEPS = ["Domain and sitemap", "Pages", "Terms and intents", "Save"];
 
-const pathOf = (url: string) => { try { return new URL(url).pathname || "/"; } catch { return url; } };
-
-export function SetupStepper({ existing, onDone }: { existing?: { profile: Profile; pages: Page[] }; onDone: (profileId: string, calibrate: boolean) => void }) {
+export function SetupStepper({ existing, onDone }: { existing?: { profile: Profile; pages: Page[] }; onDone: (profileId: string, run: boolean) => void }) {
   const { selectProfile } = useApp();
   const [step, setStep] = useState(existing ? 1 : 0);
   const [name, setName] = useState(existing?.profile.name ?? "");
@@ -56,19 +57,14 @@ export function SetupStepper({ existing, onDone }: { existing?: { profile: Profi
   const problems = useMemo(() => {
     const out: string[] = [];
     if (!terms.length) out.push("Paste the search terms, one per line");
-    for (const d of included) {
-      if (!d.intent.trim()) out.push(`${d.path}: intent statement missing`);
-      if (d.expected.length !== 10) out.push(`${d.path}: ${d.expected.length} of 10 expected terms`);
-      const unknown = d.expected.filter((t) => !terms.includes(t));
-      if (unknown.length) out.push(`${d.path}: not in the term list: ${unknown.join(", ")}`);
-    }
+    for (const d of included) out.push(...pageProblems({ terms }, d));
     return out;
   }, [terms, included]);
 
   async function discover() {
     setBusy(true); setError("");
     try {
-      const r = await findSitemap(domain, sitemapUrl || undefined);
+      const r = await discoverPages(domain, sitemapUrl || undefined);
       setDomain(r.origin); setSitemapUrl(r.sitemapUrl);
       if (!name.trim()) setName(new URL(r.origin).hostname);
       const old = new Map(drafts.map((d) => [d.url, d]));
@@ -96,13 +92,17 @@ export function SetupStepper({ existing, onDone }: { existing?: { profile: Profi
     } catch (e: any) { setError(e.message); }
   }
 
-  async function save(calibrate: boolean) {
+  async function save(run: boolean) {
     setBusy(true); setError("");
     try {
       const now = Date.now();
       const id = existing?.profile.id ?? newId();
+      // Repeated lines are found again whenever the set of ticked pages changes.
+      const before = new Set(existing?.pages.filter((p) => p.included).map((p) => p.url) ?? []);
+      const same = before.size === included.length && included.every((d) => before.has(d.url));
       const profile: Profile = {
         ...(existing?.profile ?? { createdAt: now }), id, name: name.trim() || domain, domain, sitemapUrl, pathFilter: filter, terms, updatedAt: now,
+        boilerplate: same ? existing?.profile.boilerplate : undefined,
       } as Profile;
       await db.transaction("rw", [db.profiles, db.pages], async () => {
         await db.profiles.put(profile);
@@ -110,7 +110,7 @@ export function SetupStepper({ existing, onDone }: { existing?: { profile: Profi
         await db.pages.bulkPut(drafts.map((d) => ({ id: d.id ?? newId(), profileId: id, url: d.url, path: d.path, intent: d.intent.trim(), expected: d.expected, included: d.included })));
       });
       selectProfile(id);
-      onDone(id, calibrate);
+      onDone(id, run);
     } catch (e: any) { setError(e.message); } finally { setBusy(false); }
   }
 
@@ -185,10 +185,10 @@ export function SetupStepper({ existing, onDone }: { existing?: { profile: Profi
                     multiple
                     options={terms}
                     value={d.expected}
-                    onChange={(_, v) => update(d.url, { expected: v.slice(0, 10) })}
+                    onChange={(_, v) => update(d.url, { expected: v.slice(0, EXPECTED_COUNT) })}
                     filterSelectedOptions
                     renderTags={(value, getTagProps) => value.map((t, i) => <Chip size="small" label={`${i + 1}. ${t}`} {...getTagProps({ index: i })} key={t} />)}
-                    renderInput={(p) => <TextField {...p} size="small" label={`Expected terms in order (${d.expected.length} of 10)`} />}
+                    renderInput={(p) => <TextField {...p} size="small" label={`Expected terms in order (${d.expected.length} of ${EXPECTED_COUNT})`} />}
                   />
                 </Stack>
               </Box>
@@ -205,16 +205,16 @@ export function SetupStepper({ existing, onDone }: { existing?: { profile: Profi
             <Typography variant="body1">{name || domain} · {included.length} pages · {terms.length} terms</Typography>
             {problems.length ? (
               <Alert severity="warning">
-                Fix these before calibrating:
+                Fix these before running:
                 <Box component="ul" sx={{ m: 0, pl: 2 }}>{problems.slice(0, 12).map((p) => <li key={p}>{p}</li>)}</Box>
               </Alert>
             ) : (
-              <Alert severity="info">Calibration runs every page 100 times on both scopes: {included.length * 2 * 100 * 2} Jev requests. You can pause and resume.</Alert>
+              <Alert severity="info">A run scores every ticked page once on both scores: {requestsPerRun(included.length, 1)} Jev requests. Saving keeps everything in this browser.</Alert>
             )}
             <Stack direction="row" spacing={1}>
               <Button onClick={() => setStep(2)}>Back</Button>
               <Button variant="outlined" disabled={busy} onClick={() => save(false)}>Save</Button>
-              <Button variant="contained" disabled={busy || problems.length > 0} onClick={() => save(true)}>Save and calibrate</Button>
+              <Button variant="contained" disabled={busy || problems.length > 0} onClick={() => save(true)}>Save and run</Button>
             </Stack>
           </Stack>
         )}

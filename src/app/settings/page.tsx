@@ -21,7 +21,7 @@ import DialogActions from "@mui/material/DialogActions";
 import Box from "@mui/material/Box";
 import { THEME_OPTIONS } from "@/ui/ThemeModeMenu";
 import { useApp } from "@/ui/AppState";
-import { db, deleteProfile, deleteRun } from "@/lib/db";
+import { db, deleteProfile, deleteRun } from "@/client/db";
 
 const mb = (n?: number) => (n === undefined ? "–" : `${(n / 1024 / 1024).toFixed(1)} MB`);
 
@@ -59,10 +59,10 @@ export default function SettingsPage() {
 
       <Card>
         <CardContent sx={{ p: 3 }}>
-          <Typography variant="h6" component="h2" gutterBottom>Parallel requests</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>How many Jev requests run at once during calibration and runs. The server default is {app.config?.concurrency ?? "–"}.</Typography>
+          <Typography variant="h6" component="h2" gutterBottom>Pages scored at once</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>How many pages a run scores in parallel. Each page sends 4 Jev requests per run.</Typography>
           <Box sx={{ maxWidth: 360, px: 1 }}>
-            <Slider aria-label="Parallel requests" min={1} max={16} step={1} marks value={app.concurrency} valueLabelDisplay="on" onChange={(_, v) => app.setConcurrency(v as number)} />
+            <Slider aria-label="Pages scored at once" min={1} max={8} step={1} marks value={app.concurrency} valueLabelDisplay="on" onChange={(_, v) => app.setConcurrency(v as number)} />
           </Box>
         </CardContent>
       </Card>
@@ -70,7 +70,7 @@ export default function SettingsPage() {
       <Card>
         <CardContent sx={{ p: 3 }}>
           <Typography variant="h6" component="h2" gutterBottom>Storage</Typography>
-          <Typography variant="body2" gutterBottom>Profiles, calibrations and runs are saved in this browser automatically as they happen. Every profile is kept until you delete it here.</Typography>
+          <Typography variant="body2" gutterBottom>Profiles and runs are saved in this browser automatically as they happen. Every profile is kept until you delete it here.</Typography>
           <Typography variant="body2">This browser holds {mb(usage.usage)} for this app{usage.quota ? ` of ${mb(usage.quota)} available` : ""}.</Typography>
           <Typography variant="body2" color="text.secondary">
             {usage.persisted ? "Persistent storage is granted: the browser will not clear it when space runs low." : "Persistent storage is not granted: the browser may clear data if disk space runs very low. Export a file if you need a backup."}
@@ -85,7 +85,7 @@ export default function SettingsPage() {
           <List dense>
             {profiles.map((p) => (
               <Box key={p.id}>
-                <ListItem secondaryAction={<Button color="error" onClick={() => setConfirm({ title: `Delete profile “${p.name}” and all its calibrations and runs?`, action: () => deleteProfile(p.id) })}>Delete profile</Button>}>
+                <ListItem secondaryAction={<Button color="error" onClick={() => setConfirm({ title: `Delete profile “${p.name}” and all its runs?`, action: () => deleteProfile(p.id) })}>Delete profile</Button>}>
                   <ListItemText primary={p.name} secondary={p.domain} />
                 </ListItem>
                 {(runs ?? []).filter((r) => r.profileId === p.id).map((r) => (
@@ -100,9 +100,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {app.config?.auth === "password" && (
-        <Box><Button onClick={async () => { await fetch("/api/login", { method: "DELETE" }); window.location.href = "/login"; }}>Sign out</Button></Box>
-      )}
+      <Box><Button onClick={async () => { await fetch("/api/login", { method: "DELETE" }); window.location.href = "/login"; }}>Sign out</Button></Box>
 
       <Dialog open={!!confirm} onClose={() => setConfirm(null)}>
         <DialogTitle>{confirm?.title}</DialogTitle>

@@ -1,14 +1,14 @@
 "use client";
 
 // Custom SVG charts following the spec's data-visualisation rules:
-// one dot per score with a horizontal +/- 2 SD band; metadata in series 1, page in series 2; labelled, not colour alone.
+// one dot per score with a horizontal band (the noise floor); metadata in series 1, page in series 2; labelled, not colour alone.
 
 import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Tooltip from "@mui/material/Tooltip";
 
-export type BandRow = { id: string; label: string; meta?: { score: number; sd: number }; page?: { score: number; sd: number } };
+export type BandRow = { id: string; label: string; meta?: { score: number; band: number }; page?: { score: number; band: number } };
 
 export function BandChart({ rows, onSelect }: { rows: BandRow[]; onSelect?: (id: string) => void }) {
   const t = useTheme();
@@ -24,9 +24,9 @@ export function BandChart({ rows, onSelect }: { rows: BandRow[]; onSelect?: (id:
     if (!s) return null;
     const y = top + rows.indexOf(row) * rowH + rowH / 2 + dy;
     return (
-      <Tooltip key={key} title={`${key === "meta" ? "Metadata" : "Page"} score ${s.score.toFixed(2)} ± ${(2 * s.sd).toFixed(2)}`}>
+      <Tooltip key={key} title={`${key === "meta" ? "Metadata" : "Page"} score ${s.score.toFixed(2)} ± ${s.band.toFixed(2)}`}>
         <g>
-          <line x1={X(s.score - 2 * s.sd)} x2={X(s.score + 2 * s.sd)} y1={y} y2={y} stroke={color} strokeWidth={6} strokeOpacity={0.3} strokeLinecap="round" />
+          <line x1={X(s.score - s.band)} x2={X(s.score + s.band)} y1={y} y2={y} stroke={color} strokeWidth={6} strokeOpacity={0.3} strokeLinecap="round" />
           <circle cx={X(s.score)} cy={y} r={4.5} fill={color} />
         </g>
       </Tooltip>
@@ -34,7 +34,7 @@ export function BandChart({ rows, onSelect }: { rows: BandRow[]; onSelect?: (id:
   };
   return (
     <Box sx={{ overflowX: "auto" }}>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Score by page with plus or minus two standard deviation bands" style={{ minWidth: 560, maxWidth: W, display: "block" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Score by page with the noise floor as a band" style={{ minWidth: 560, maxWidth: W, display: "block" }}>
         {[0, 2, 4, 6, 8, 10].map((v) => (
           <g key={v}>
             <line x1={X(v)} x2={X(v)} y1={top - 6} y2={H - 22} stroke={grid} />

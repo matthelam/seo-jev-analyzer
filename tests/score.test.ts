@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { score, termSum, pointsAvailable, stat, level, scoreLevel, splitsIntoClusters, sdOfMean } from "@/lib/score";
+import { score, termSum, pointsAvailable, stat, scoreLevel } from "@/core/scoring";
 
 const TERMS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"];
 const EXPECTED = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"];
@@ -32,22 +32,8 @@ describe("statistics", () => {
     expect(s.mean).toBe(2.5);
     expect(s.sd).toBeCloseTo(1.2910, 3);
   });
-  it("marks overlapping bands as level", () => {
-    expect(level(3.0, 0.01, 3.03, 0.01)).toBe(true);
-    expect(level(3.0, 0.01, 3.1, 0.01)).toBe(false);
-  });
   it("levels: weak below 2, fair to 3.5, strong above", () => {
     expect([scoreLevel(1.99), scoreLevel(2), scoreLevel(3.5), scoreLevel(3.51)]).toEqual(["weak", "fair", "fair", "strong"]);
   });
-  it("flags two clusters", () => {
-    expect(splitsIntoClusters([...Array(50).fill(3.0), ...Array(50).fill(3.5)])).toBe(true);
-    expect(splitsIntoClusters(Array.from({ length: 100 }, (_, i) => 3 + (i % 7) * 0.002))).toBe(false);
-  });
 });
 
-describe("profile band", () => {
-  it("uses the SD of a mean, which shrinks with more pages", () => {
-    expect(sdOfMean([0.02, 0.02, 0.02, 0.02])).toBeCloseTo(0.01);
-    expect(sdOfMean(Array(18).fill(0.02))).toBeCloseTo(0.02 / Math.sqrt(18));
-  });
-});
