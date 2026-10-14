@@ -7,6 +7,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
+import Tooltip from "@mui/material/Tooltip";
 import Alert from "@mui/material/Alert";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
@@ -114,7 +115,7 @@ export function DashboardView({ onEdit }: { onEdit: () => void }) {
         </Box>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           <Button onClick={onEdit} disabled={busy}>Edit profile</Button>
-          <Button onClick={doExport}>Export</Button>
+          <Tooltip describeChild title="Work is saved in this browser automatically. Export a file only to back up the profile or open it in another browser."><Button onClick={doExport}>Export file</Button></Tooltip>
           {(!calibration || stale || calibration.status === "failed") && <Button variant="contained" onClick={calibrate} disabled={busy || !config || !!config.error}>Calibrate</Button>}
           {calibration?.status === "running" && !busy && <Button variant="contained" onClick={resume}>Resume calibration</Button>}
           {calOk && <Button variant="contained" onClick={analyse} disabled={busy}>Run now</Button>}
@@ -140,8 +141,8 @@ export function DashboardView({ onEdit }: { onEdit: () => void }) {
       {calibration?.status === "failed" && <Alert severity="error">Calibration failed: {calibration.error}</Alert>}
       {stale && calibration && <Alert severity="error">The profile changed since it was calibrated (terms, intents, expected lists, pages, question wording or Jev version). Recalibrate before new runs.</Alert>}
       {calibration?.status === "complete" && (
-        <Alert severity={profile.lastExportedAt && profile.lastExportedAt > (calibration.completedAt ?? 0) ? "info" : "warning"} icon={false}>
-          Calibrated {when(calibration.completedAt)} with {calibration.model} · {calibration.runsTarget} runs · site band ± {fmt(band(calibration.siteSd?.meta ?? 0))} · last exported {when(profile.lastExportedAt)}
+        <Alert severity="info" icon={false}>
+          Calibrated {when(calibration.completedAt)} with {calibration.model} · {calibration.runsTarget} runs · site band ± {fmt(band(calibration.siteSd?.meta ?? 0))} · saved in this browser
           {calibration.error ? ` · ${calibration.error}` : ""}
         </Alert>
       )}

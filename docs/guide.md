@@ -50,6 +50,8 @@ The **profile score** is the mean of the page scores across a profile's pages.
 
 Jev's answers vary very slightly between identical runs. When a profile is set up, calibration runs every page 100 times, unchanged, and measures the standard deviation (SD) of each page's score. Every later score is shown with a band of ± 2 SD. Two scores whose bands overlap are treated as level.
 
+How consistent Jev is in practice, measured on 10 public pages: the [Jev Consistency Report](/guide/jev-consistency-report).
+
 A calibration belongs to one Jev version and one set of inputs. Changing the model version, the terms, an intent statement, an expected list, the question wording or the page set marks it stale, and the profile must be recalibrated before new runs. Calibrations do not expire with age.
 
 ## Setting up a profile
@@ -67,7 +69,8 @@ To change a profile later, select **Edit profile** on the Dashboard. Any change 
 
 | Element | Shows |
 |---|---|
-| Calibration banner | When and with which Jev version the profile was calibrated, the site band, and when the profile was last exported |
+| Calibration banner | When and with which Jev version the profile was calibrated, and the site band |
+| Saved in this browser | Confirms that work is saved automatically; hover for where it is kept |
 | Score cards | Profile metadata score, profile page score, and points available |
 | Band chart | Each page's metadata and page score with its band |
 | Pages table | Each page, its intent, both scores with bands, and the change since the previous comparable run |
@@ -75,7 +78,13 @@ To change a profile later, select **Edit profile** on the Dashboard. Any change 
 
 ## Your data and privacy
 
-Everything you enter and every result is stored in your browser (IndexedDB) and nowhere else. The server only adds your TypeSafe key to requests and fetches public pages; it keeps nothing. Clearing your browser's site data deletes your profiles, so export each profile to a JSON file after calibrating. An exported file can be imported in any browser.
+Everything you enter and every result is saved in your browser (IndexedDB) automatically, as it happens: each calibration answer, each run and each profile. There is nothing to save by hand, and you can keep as many profiles as you need; switch between them with the profile selector at the top. Closing the tab part-way through a calibration loses nothing: select **Resume calibration** when you return.
+
+The server only adds your TypeSafe key to requests and fetches public pages; it keeps nothing.
+
+Saved data belongs to one browser at one address. Another browser, a private window or another address (such as a deployment preview link) starts empty. Clearing your browser's site data deletes your profiles.
+
+**Export file** writes a profile, with its calibrations and runs, to a JSON file. Use it to keep a backup or to open the profile in another browser; **Import** in the setup screen reads it back as a new profile.
 
 ## Limits
 

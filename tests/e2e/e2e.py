@@ -88,6 +88,27 @@ async def main():
         runs = await count(pg, "runs")
         check("past runs kept", runs == 2, f"{runs}")
 
+        # 5b. Saved automatically: confirmation, a fresh tab with no import, a second profile, switching back
+        await expect(pg.get_by_text("Run saved in this browser")).to_be_visible(timeout=5000)
+        check("finished run confirms it was saved", True)
+        check("save status shown in the top bar", await pg.get_by_text("Saved in this browser", exact=True).count() == 1)
+        tab = await ctx.new_page()
+        await tab.goto(A + "/dashboard")
+        await expect(tab.get_by_text("Run 2 vs Baseline")).to_be_visible(timeout=15000)
+        check("a new tab shows the saved profile, calibration and runs without importing", await tab.locator(".MuiDataGrid-row").count() == 3)
+        await tab.close()
+        await pg.get_by_label("Profile", exact=True).click()
+        await pg.get_by_role("option", name="New profile or import").click()
+        await pg.get_by_role("button", name="Load the Boulderfest example").click()
+        await expect(pg.get_by_text("18 pages · 60 terms")).to_be_visible(timeout=10000)
+        await pg.get_by_label("Profile", exact=True).click()
+        await pg.get_by_role("option", name="Pottery fixture").click()
+        await expect(pg.get_by_text("Run 2 vs Baseline")).to_be_visible(timeout=10000)
+        check("two profiles kept side by side; switching back shows the first profile's runs", await count(pg, "profiles") == 2)
+        await pg.reload()
+        await expect(pg.get_by_role("heading", name="Pottery fixture")).to_be_visible(timeout=10000)
+        check("the selected profile is remembered after a reload", True)
+
         # 6. Export
         async with pg.expect_download() as dl:
             await pg.get_by_role("button", name="Export").click()

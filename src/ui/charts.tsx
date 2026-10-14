@@ -1,7 +1,7 @@
 "use client";
 
 // Custom SVG charts following the spec's data-visualisation rules:
-// one dot per score with a horizontal +/- 2 SD band; metadata in primary, page in tertiary; labelled, not colour alone.
+// one dot per score with a horizontal +/- 2 SD band; metadata in series 1, page in series 2; labelled, not colour alone.
 
 import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -12,8 +12,8 @@ export type BandRow = { id: string; label: string; meta?: { score: number; sd: n
 
 export function BandChart({ rows, onSelect }: { rows: BandRow[]; onSelect?: (id: string) => void }) {
   const t = useTheme();
-  const primary = t.vars?.palette.primary.main ?? t.palette.primary.main;
-  const tertiary = t.vars?.palette.m3.tertiary ?? t.palette.m3.tertiary;
+  const primary = t.vars?.palette.viz.series1 ?? t.palette.viz.series1;
+  const tertiary = t.vars?.palette.viz.series2 ?? t.palette.viz.series2;
   const grid = t.vars?.palette.m3.outlineVariant ?? t.palette.m3.outlineVariant;
   const quiet = t.vars?.palette.text.secondary ?? t.palette.text.secondary;
   const W = 1100, left = 240, right = 24, rowH = 28, top = 28;

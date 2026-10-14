@@ -23,13 +23,15 @@ Two scores are reported per page. The **metadata score** reads only the title, m
 
 **Calibration.** Jev's answers vary slightly between identical runs. Setting up a profile runs every page 100 times to measure each page's standard deviation; scores are shown with a ± 2 SD band and overlapping bands count as level. A calibration is tied to the Jev version and to the inputs, and is marked stale when either changes.
 
+**Evidence.** The [Jev Consistency Report](https://seo-jev-analyzer.vercel.app/guide/jev-consistency-report) scores 10 public pages 100 times each; the raw data and scripts are in [docs/evidence/jev-consistency-2026-10-14](docs/evidence/jev-consistency-2026-10-14).
+
 **Limits.** Relevance as judged by Jev, not a search ranking or AI-answer visibility; no fact checking. See [docs/guide.md](docs/guide.md) and [docs/method.md](docs/method.md).
 
 ## Where data lives
 
 | Data | Where |
 |---|---|
-| Profiles, pages, terms, intents, calibrations, runs | Your browser's IndexedDB; export and import as JSON |
+| Profiles, pages, terms, intents, calibrations, runs | Your browser's IndexedDB, saved automatically as they happen; export and import as JSON for backup or another browser |
 | Theme choice | Your browser's local storage |
 | TypeSafe API key | A server environment variable; never sent to the browser |
 

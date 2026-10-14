@@ -28,6 +28,8 @@ type State = {
   job: Job | null;
   startJob: (kind: Job["kind"], fn: (onProgress: (p: Progress) => void, signal: AbortSignal) => Promise<unknown>) => Promise<void>;
   clearJobError: () => void;
+  notice: string | null; // short confirmation after a job finishes and its results are saved
+  clearNotice: () => void;
 };
 
 const Ctx = createContext<State | null>(null);
@@ -40,6 +42,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [concurrencyOverride, setConcurrencyOverride] = useState<number | null>(null);
   const [job, setJob] = useState<Job | null>(null);
   const [stale, setStale] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const loaded = useRef(false);
 
   useEffect(() => {
@@ -80,6 +83,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     try {
       await fn((progress) => setJob((j) => (j ? { ...j, progress } : j)), controller.signal);
       setJob(null);
+      setNotice(kind === "calibration" ? "Calibration saved in this browser" : "Run saved in this browser");
     } catch (e: any) {
       const paused = e?.name === "AbortError";
       setJob((j) => (j ? { ...j, error: paused ? undefined : e?.message ?? String(e) } : j));
@@ -92,6 +96,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     selectProfile, selectRun,
     concurrency: concurrencyOverride ?? config?.concurrency ?? 4,
     setConcurrency, job, startJob, clearJobError: () => setJob(null),
+    notice, clearNotice: () => setNotice(null),
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

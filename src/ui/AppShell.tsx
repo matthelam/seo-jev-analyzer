@@ -14,6 +14,7 @@ import MenuBookOutlined from "@mui/icons-material/MenuBookOutlined";
 import SettingsOutlined from "@mui/icons-material/SettingsOutlined";
 import { ThemeModeMenu } from "./ThemeModeMenu";
 import { TopBarSelectors } from "./TopBarSelectors";
+import { SaveStatus } from "./SaveStatus";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: <DashboardOutlined /> },
@@ -70,6 +71,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               seo-jev-analyzer
             </Typography>
             <TopBarSelectors />
+            <SaveStatus />
             <ThemeModeMenu />
           </Toolbar>
         </AppBar>

@@ -20,6 +20,10 @@ export default function GuidePage() {
             {h}
           </Link>
         ))}
+        <Typography variant="subtitle2" sx={{ mt: 3, mb: 1 }}>Reports</Typography>
+        <Link href="/guide/jev-consistency-report" underline="hover" color="text.secondary" variant="body2" sx={{ display: "block", py: 0.75 }}>
+          Jev Consistency Report
+        </Link>
       </Box>
       <Box component="article" sx={{ minWidth: 0 }}>
         <Markdown source={source} />

@@ -9,11 +9,17 @@ import { createTheme } from "@mui/material/styles";
 declare module "@mui/material/styles" {
   interface Palette {
     m3: M3Roles;
+    viz: VizRoles;
   }
   interface PaletteOptions {
     m3?: M3Roles;
+    viz?: VizRoles;
   }
 }
+
+// Data colours for charts: two categorical series validated for colour-vision deficiency
+// against each mode's surface (dataviz validator: CVD delta E >= 24, contrast >= 3:1).
+export type VizRoles = { series1: string; series2: string };
 
 export type M3Roles = {
   primaryContainer: string;
@@ -36,6 +42,7 @@ const light = {
     tertiary: "#715574", tertiaryContainer: "#FBD7FC", errorContainer: "#FFDAD6",
     surfaceVariant: "#E1E2EC", onSurfaceVariant: "#44474F", outline: "#74777F", outlineVariant: "#C4C6D0",
   },
+  viz: { series1: "#2a78d6", series2: "#eb6834" },
 };
 
 const dark = {
@@ -46,6 +53,7 @@ const dark = {
     tertiary: "#DEBCDF", tertiaryContainer: "#583E5B", errorContainer: "#93000A",
     surfaceVariant: "#44474F", onSurfaceVariant: "#C4C6D0", outline: "#8E9099", outlineVariant: "#44474F",
   },
+  viz: { series1: "#3987e5", series2: "#d95926" },
 };
 
 const palette = (s: typeof light) => ({
@@ -56,6 +64,7 @@ const palette = (s: typeof light) => ({
   text: { primary: s.onSurface, secondary: s.m3.onSurfaceVariant },
   divider: s.m3.outlineVariant,
   m3: s.m3,
+  viz: s.viz,
 });
 
 const rem = (px: number) => `${px / 16}rem`;

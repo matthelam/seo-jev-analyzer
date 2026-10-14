@@ -70,9 +70,11 @@ export default function SettingsPage() {
       <Card>
         <CardContent sx={{ p: 3 }}>
           <Typography variant="h6" component="h2" gutterBottom>Storage</Typography>
+          <Typography variant="body2" gutterBottom>Profiles, calibrations and runs are saved in this browser automatically as they happen. Every profile is kept until you delete it here.</Typography>
           <Typography variant="body2">This browser holds {mb(usage.usage)} for this app{usage.quota ? ` of ${mb(usage.quota)} available` : ""}.</Typography>
           <Typography variant="body2" color="text.secondary">
-            {usage.persisted ? "Persistent storage is granted: the browser will not clear it under pressure." : "Persistent storage is not granted; the browser may clear data when space runs low. Export your profiles."}
+            {usage.persisted ? "Persistent storage is granted: the browser will not clear it when space runs low." : "Persistent storage is not granted: the browser may clear data if disk space runs very low. Export a file if you need a backup."}
+            {" "}Saved data belongs to this address in this browser only; another browser, a private window or another address, such as a deployment preview link, has separate storage.
           </Typography>
         </CardContent>
       </Card>
