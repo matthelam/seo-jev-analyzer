@@ -41,7 +41,7 @@ describe("HTTP and MCP parity", () => {
   it("lists one MCP tool per operation", async () => {
     const r = await mcp("tools/list", {});
     expect(r.body.result.tools.map((t: any) => t.name).sort()).toEqual(
-      ["compare_results", "discover_pages", "find_boilerplate", "get_method", "read_page", "score_page", "self_test"],
+      ["compare_results", "discover_pages", "find_boilerplate", "get_method", "read_page", "score_page", "self_test", "test_revision"],
     );
   });
   it("get_method is identical", async () => {
@@ -64,6 +64,18 @@ describe("HTTP and MCP parity", () => {
     expect(["up", "down", "level"]).toContain(cmp.scores.meta.verdict);
     const d = await http("compare_results", { result: c.body.result.structuredContent, baseline: a.body });
     expect(d.body).toEqual(cmp);
+  });
+  it("test_revision is identical, and its current result passes back as baseline", async () => {
+    const req = { ...REQ, revision: { description: "Kids' climbing classes for ages 5 to 14, every Tuesday, $25 a session." } };
+    const a = await http("test_revision", req);
+    const b = await mcp("tools/call", { name: "test_revision", arguments: req });
+    expect(a.status).toBe(200);
+    const s = (r: any) => ({ ...r, current: strip(r.current), revised: strip(r.revised), comparison: { ...r.comparison, baselineScoredAt: "x" } });
+    expect(s(b.body.result.structuredContent)).toEqual(s(a.body));
+    expect(a.body).toMatchObject({ changed: ["description"], currentFrom: "scored", page: REQ.page });
+    expect(a.body.comparison.comparable).toBe(true);
+    const again = await http("test_revision", { ...REQ, baseline: a.body.current, revision: { title: "Kids' climbing classes, ages 5 to 14" } });
+    expect(again.body.currentFrom).toBe("baseline");
   });
   it("errors match: missing inputs", async () => {
     const a = await http("score_page", { text: TEXT });

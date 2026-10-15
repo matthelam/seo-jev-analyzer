@@ -42,13 +42,15 @@ AI agent ───────────────────────�
 
 ## MCP server
 
-Endpoint `https://<your deployment>/api/mcp`, Streamable HTTP, header `Authorization: Bearer <MCP_API_KEY>`. Tools: `get_method`, `discover_pages`, `find_boilerplate`, `read_page`, `score_page`, `compare_results`, `self_test`.
+Endpoint `https://<your deployment>/api/mcp`, Streamable HTTP, header `Authorization: Bearer <MCP_API_KEY>`. Tools: `get_method`, `discover_pages`, `find_boilerplate`, `read_page`, `score_page`, `test_revision`, `compare_results`, `self_test`.
 
 A before-and-after loop for an agent:
 
 1. `score_page` with `profileUrl` (an exported profile file at a public URL) and `page`; keep the returned JSON.
 2. Edit the page, or prepare a draft.
 3. `score_page` again with the kept JSON as `baseline` (and `text` for a draft). The reply's `comparison` says up, down or level for each score.
+
+To test content before publishing, use `test_revision` instead: give `page` and `revision` with only the fields you changed (for example `{ "description": "…" }`). One call returns the current score, the revised score and the comparison. Pass the reply's `current` as `baseline` with the next revision and only the revision is scored.
 
 ## Where data lives
 

@@ -99,10 +99,13 @@ The same engine is available as an MCP server at `/api/mcp` (Streamable HTTP). C
 | `find_boilerplate` | Lines repeated across pages, to store in a profile |
 | `read_page` | The exact text the scorer reads for a page |
 | `score_page` | Scores a page or a draft text; optional runs and baseline |
+| `test_revision` | Scores the current page and a revision of it in one call; send only the changed fields |
 | `compare_results` | Compares two stored results without new Jev requests |
 | `self_test` | Scores three practice texts with obvious answers |
 
 `score_page` takes its inputs from the request, else from the page's entry in a profile (`profile`, or `profileUrl` pointing at an exported profile file), else from `baseline`. Every result is self-contained JSON: keep it, edit the page, and score again with the kept result as `baseline` to get up, down or level. Use `text` to score a draft before publishing it.
+
+To check changes before they go live, use `test_revision` with `page` and `revision`: only the fields you changed (`title`, `description`, `ogTitle`, `ogDescription`, `jsonLd` or `body`). The reply holds the current score, the revised score and up, down or level for each. Pass its `current` back as `baseline` with the next revision and only the revision is scored. In the web app, open a page from the dashboard and select **Test a revision**: the live text loads for editing, and each try is listed with its change.
 
 ## Limits
 

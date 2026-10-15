@@ -29,6 +29,7 @@ Dependencies point inwards only. The engine receives its adapters through its co
 | Find boilerplate | `POST /api/v1/find_boilerplate` | `find_boilerplate` | Lines repeated on 80% or more of the given pages |
 | Read page | `POST /api/v1/read_page` | `read_page` | The text the scorer reads for a URL: metadata and main body, boilerplate removed |
 | Score page | `POST /api/v1/score_page` | `score_page` | Scores a URL or supplied text; optional runs, scopes and baseline |
+| Test revision | `POST /api/v1/test_revision` | `test_revision` | Scores the current page and a revision of it in one call; only changed fields are sent |
 | Compare results | `POST /api/v1/compare_results` | `compare_results` | Compares two stored results without new Jev requests |
 | Self test | `POST /api/v1/self_test` | `self_test` | Scores three practice texts with obvious answers |
 
@@ -48,6 +49,19 @@ Inputs come from, in order of precedence: fields in the request; the page's entr
 | `baseline` | An earlier result; the reply then includes the comparison |
 
 The result is self-contained: it carries its inputs, model, question version, fingerprint and text hash, so any result can be passed back later as a baseline.
+
+## Test revision
+
+Checks content before it is published. Takes every score page input, plus `revision`: only the fields that change (`title`, `description`, `ogTitle`, `ogDescription`, `jsonLd`, `body`). The other fields come from the live page, or from `text` when the page is not published yet. Boilerplate is removed from the revised body as from any other.
+
+| Behaviour | Rule |
+|---|---|
+| Scopes | Both when a metadata field changed; page only when only the body changed (the metadata score cannot move). `scopes` overrides |
+| Current score | Scored in the same call, unless `baseline` is given and matches the current text hash, fingerprint and scopes; it is then reused and only the revision is scored (half the Jev requests). A baseline that does not match is not used, with a warning |
+| No change | A revision identical to the current page is refused before any Jev request |
+| Reply | `changed`, `current`, `revised` (source `revision`) and `comparison` (revised against current) |
+
+To iterate, keep `current` and pass it as `baseline` with each new revision.
 
 ## Noise floor
 

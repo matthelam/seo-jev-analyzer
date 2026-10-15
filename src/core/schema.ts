@@ -99,7 +99,7 @@ export const ScoreResult = z.object({
   fingerprint: z.string(),
   inputs: Inputs,
   text: z.object({
-    source: z.enum(["url", "text"]),
+    source: z.enum(["url", "text", "revision"]).describe("revision: the current page with a test_revision request's changes applied"),
     meta: PageMeta,
     bodyChars: z.number(),
     textHash: z.string(),
@@ -128,6 +128,41 @@ export const ScoreRequest = z.object({
   baseline: ScoreResult.optional().describe("An earlier result to compare against"),
 });
 export type ScoreRequest = z.input<typeof ScoreRequest>;
+
+/** The fields a revision may replace; any field left out keeps the current page's value. */
+export const REVISABLE = ["title", "description", "ogTitle", "ogDescription", "jsonLd", "body"] as const;
+export type Revisable = (typeof REVISABLE)[number];
+
+export const Revision = z
+  .object({
+    title: z.string().optional(),
+    description: z.string().optional().describe("Meta description"),
+    ogTitle: z.string().optional(),
+    ogDescription: z.string().optional(),
+    jsonLd: z.array(z.string()).optional().describe("Text of the JSON-LD blocks, as read_page returns it"),
+    body: z.string().optional().describe("Main body text, one paragraph or heading per line"),
+  })
+  .refine((r) => REVISABLE.some((k) => r[k] !== undefined), "give at least one field to change");
+export type Revision = z.infer<typeof Revision>;
+
+export const RevisionRequest = ScoreRequest.omit({ scopes: true }).extend({
+  revision: Revision.describe("The changed content; any field left out keeps the current page's value"),
+  text: PageText.optional().describe("The current content, when it is not published at page; else the page is read"),
+  scopes: z.array(Scope).min(1).optional().describe("Default: both when a metadata field changed, else page only"),
+  baseline: ScoreResult.optional().describe("An earlier result for the current page; used as the current score instead of scoring it again"),
+});
+export type RevisionRequest = z.input<typeof RevisionRequest>;
+
+export const RevisionResult = z.object({
+  page: z.string(),
+  changed: z.array(z.enum(REVISABLE)).describe("Fields whose revised value differs from the current page"),
+  currentFrom: z.enum(["scored", "baseline"]).describe("baseline: the supplied baseline stood in for the current score"),
+  warnings: z.array(z.string()),
+  current: ScoreResult,
+  revised: ScoreResult,
+  comparison: Comparison.describe("Revised against current: up, down or level per score"),
+});
+export type RevisionResult = z.infer<typeof RevisionResult>;
 
 export const CompareRequest = z.object({ result: ScoreResult, baseline: ScoreResult });
 export const DiscoverRequest = z.object({

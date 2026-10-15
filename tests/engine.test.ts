@@ -58,3 +58,50 @@ describe("engine", () => {
     expect(pointsRemaining([a, b], "meta")).toBeCloseTo(20 - a.scores.meta!.score - b.scores.meta!.score);
   });
 });
+
+describe("test_revision", () => {
+  it("merges only the changed fields over the live page and compares revised with current", async () => {
+    const r = await engine().testRevision({ ...REQ, revision: { title: "New title" } });
+    expect(r.changed).toEqual(["title"]);
+    expect(r.currentFrom).toBe("scored");
+    expect(r.current.text).toMatchObject({ source: "url", meta: { title: "T" } });
+    expect(r.revised.text).toMatchObject({ source: "revision", meta: { title: "New title" }, bodyChars: "Body".length });
+    expect(r.revised.fingerprint).toBe(r.current.fingerprint);
+    expect(r.comparison.comparable).toBe(true);
+    expect(Object.keys(r.comparison.scores).sort()).toEqual(["meta", "page"]);
+  });
+  it("a body-only revision scores the page score only, and removes boilerplate from the revised body", async () => {
+    const r = await engine().testRevision({ ...REQ, revision: { body: "Body\r\nMore\r\nShared" } });
+    expect(r.changed).toEqual(["body"]);
+    expect(r.revised.scores.meta).toBeUndefined();
+    expect(r.revised.text.bodyChars).toBe("Body\nMore".length);
+    expect(Object.keys(r.comparison.scores)).toEqual(["page"]);
+  });
+  it("refuses a revision that changes nothing", async () => {
+    await expect(engine().testRevision({ ...REQ, revision: { title: "T", body: "Body\nShared" } })).rejects.toThrow("nothing to test");
+  });
+  it("reuses a matching baseline as the current score and scores only the revision", async () => {
+    const judge = new SequenceJudge();
+    const calls = { n: 0 };
+    const counting: Judge = { model: judge.model, simulated: false, intentFit: (...a) => (calls.n++, judge.intentFit()), termRatings: (s, t) => (calls.n++, judge.termRatings(s, t)) };
+    const e = engine(counting);
+    const base = await e.scorePage(REQ);
+    calls.n = 0;
+    const r = await e.testRevision({ page: REQ.page, boilerplate: REQ.boilerplate, baseline: base, revision: { description: "New" } });
+    expect(r.currentFrom).toBe("baseline");
+    expect(r.current).toEqual(base);
+    expect(calls.n).toBe(4);
+    expect(r.warnings).toEqual([]);
+  });
+  it("scores the current page again when the baseline's text no longer matches", async () => {
+    const base = await engine().scorePage({ ...REQ, boilerplate: [] });
+    const r = await engine().testRevision({ ...REQ, baseline: base, revision: { title: "New" } });
+    expect(r.currentFrom).toBe("scored");
+    expect(r.warnings[0]).toContain("current page text has changed");
+  });
+  it("uses text as the current content for an unpublished page", async () => {
+    const r = await engine().testRevision({ ...REQ, page: undefined, text: { meta: META, body: "Draft" }, revision: { body: "Draft two" } });
+    expect(r.current.text.source).toBe("text");
+    expect(r.revised.text.bodyChars).toBe("Draft two".length);
+  });
+});

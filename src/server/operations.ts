@@ -3,7 +3,7 @@
 import { z } from "zod";
 import {
   BoilerplateRequest, BoilerplateResult, CompareRequest, Comparison, DiscoverRequest, DiscoverResult, Empty,
-  MethodResult, ReadRequest, ReadResult, ScoreRequest, ScoreResult, SelfTestResult,
+  MethodResult, ReadRequest, ReadResult, RevisionRequest, RevisionResult, ScoreRequest, ScoreResult, SelfTestResult,
 } from "@/core/schema";
 import type { ScoringEngine } from "@/engine/engine";
 import { OutputError } from "./errors";
@@ -55,6 +55,17 @@ export const OPERATIONS = [
       "Pass an earlier result as baseline to get the change: level when within noise floor x sqrt(1/runs + 1/baseline runs), else up or down. The returned JSON can be stored and passed back as a baseline.",
     input: ScoreRequest, output: ScoreResult, readOnly: true, costly: true,
     run: (e, i) => e.scorePage(i),
+  }),
+  op({
+    name: "test_revision", title: "Test revision",
+    description:
+      "Before publishing, tests whether revised content scores better than the current page, in one call. Give page (and inputs as for score_page) and revision: only the fields you changed " +
+      "(title, description, ogTitle, ogDescription, jsonLd, body); the rest come from the live page, or from text for an unpublished page. " +
+      "Returns current, revised and comparison (up, down or level per score). Default scopes: both when a metadata field changed, else page only. " +
+      "Pass the current page's earlier result as baseline to reuse it instead of scoring the current page again (half the Jev requests); it is used only when the page text and inputs still match. " +
+      "Iterate by keeping current and passing it as baseline with each new revision.",
+    input: RevisionRequest, output: RevisionResult, readOnly: true, costly: true,
+    run: (e, i) => e.testRevision(i),
   }),
   op({
     name: "compare_results", title: "Compare results",

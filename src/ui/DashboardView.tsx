@@ -31,6 +31,7 @@ import type { ScoreResult } from "@/core/schema";
 import type { Run, StoredResult } from "@/client/types";
 import { useApp } from "./AppState";
 import { BandChart, TermChart } from "./charts";
+import { RevisionDialog } from "./RevisionDialog";
 
 const fmt = (n: number | undefined, d = 2) => (n === undefined || Number.isNaN(n) ? "–" : n.toFixed(d));
 const when = (t?: number) => (t ? new Date(t).toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "never");
@@ -70,6 +71,7 @@ export function DashboardView({ onEdit }: { onEdit: () => void }) {
   const app = useApp();
   const { profile, pages, runs, run, method, job, startJob, concurrency, runsPerPage, setRunsPerPage } = app;
   const [detail, setDetail] = useState<string | null>(null);
+  const [revising, setRevising] = useState(false);
 
   const results = useLiveQuery(async () => (run ? db.scores.where({ runId: run.id }).toArray() : []), [run?.id]);
   const previous: Run | undefined = useMemo(() => {
@@ -200,6 +202,9 @@ export function DashboardView({ onEdit }: { onEdit: () => void }) {
               </Box>
               <IconButton aria-label="Close" onClick={() => setDetail(null)}><Close /></IconButton>
             </Stack>
+            <Tooltip describeChild title="Edit the live title, description or body and see whether the scores go up before you publish.">
+              <span><Button variant="outlined" sx={{ mt: 2 }} onClick={() => setRevising(true)} disabled={busy || !method}>Test a revision</Button></span>
+            </Tooltip>
             {dm ? (
               <Stack spacing={2.5} sx={{ mt: 2 }}>
                 <Stack direction="row" spacing={3}>
@@ -237,6 +242,9 @@ export function DashboardView({ onEdit }: { onEdit: () => void }) {
           </Box>
         )}
       </Drawer>
+      {detailPage && (
+        <RevisionDialog open={revising} onClose={() => setRevising(false)} page={detailPage} profile={profile} baseline={dr} runs={runsPerPage} />
+      )}
     </Stack>
   );
 }

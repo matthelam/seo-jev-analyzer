@@ -6,14 +6,15 @@ import { OPERATIONS, execute } from "./operations";
 import { getEngine } from "./container";
 import { toApiError } from "./errors";
 
-export const SERVER_INFO = { name: "seo-jev-analyzer", version: "0.2.0" };
+export const SERVER_INFO = { name: "seo-jev-analyzer", version: "0.3.0" };
 
 export function buildMcpServer() {
   const server = new McpServer(SERVER_INFO, {
     instructions:
       "Scores web pages against an intent statement and 10 expected search terms with the Jev decision model. " +
       "Typical flow: get_method once; score_page before an edit and keep the JSON; edit; score_page again with that JSON as baseline. " +
-      "Small changes are level: within noise floor x sqrt(1/runs + 1/baseline runs). Use text to score a draft without publishing it.",
+      "To try content before publishing: test_revision with only the changed fields; keep its current result and pass it as baseline for each further revision. " +
+      "Small changes are level: within noise floor x sqrt(1/runs + 1/baseline runs).",
   });
   for (const o of OPERATIONS) {
     server.registerTool(

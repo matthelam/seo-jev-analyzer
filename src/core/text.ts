@@ -1,7 +1,7 @@
 // What the scorer reads: metadata alone (metadata score) or metadata and body (page score),
 // with the profile's boilerplate lines removed from the body.
 
-import { BOILERPLATE_SHARE, type PageText, type Scope } from "./schema";
+import { BOILERPLATE_SHARE, REVISABLE, type PageText, type Revisable, type Revision, type Scope } from "./schema";
 
 /** Body text beyond this length is cut before scoring. */
 export const MAX_BODY_CHARS = 60_000;
@@ -23,4 +23,25 @@ export function findBoilerplate(bodies: string[], share = BOILERPLATE_SHARE): st
   for (const b of bodies) for (const line of new Set(b.split("\n"))) if (line.trim()) counts.set(line, (counts.get(line) ?? 0) + 1);
   const limit = Math.ceil(bodies.length * share);
   return [...counts].filter(([, n]) => n >= limit).map(([l]) => l).sort();
+}
+
+/** The current text with a revision's fields put in; fields the revision leaves out keep their current value. */
+export function revise(text: PageText, r: Revision): PageText {
+  const m = text.meta;
+  return {
+    meta: {
+      title: r.title ?? m.title,
+      description: r.description ?? m.description,
+      ogTitle: r.ogTitle ?? m.ogTitle,
+      ogDescription: r.ogDescription ?? m.ogDescription,
+      jsonLd: r.jsonLd ?? m.jsonLd,
+    },
+    body: r.body === undefined ? text.body : r.body.replace(/\r\n?/g, "\n"),
+  };
+}
+
+/** The fields that differ between two texts, in REVISABLE order. */
+export function changedFields(a: PageText, b: PageText): Revisable[] {
+  const value = (t: PageText, k: Revisable) => (k === "body" ? t.body : k === "jsonLd" ? JSON.stringify(t.meta.jsonLd) : t.meta[k]);
+  return REVISABLE.filter((k) => value(a, k) !== value(b, k));
 }
